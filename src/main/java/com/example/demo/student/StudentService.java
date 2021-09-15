@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -45,10 +46,21 @@ public class StudentService {
     }
     @Transactional
     public void updateStudent(Long studentId, String name, String email){
-        boolean exists = studentRepository.existsById(studentId);
-        if(!exists){
-            throw new IllegalStateException("student with id " + studentId + " does not exists");
+        Student student  = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "student with id " + studentId + " does not exist"
+                ));
+        if(name != null && name.length() > 0 && !name.equals(student.getName())){
+            student.setName(name);
+        }
+        if(email != null && email.length() > 0 && !email.equals(student.getEmail())){
+            Optional<Student> studentOptional = studentRepository
+                    .findStudentByEmail(email);
 
+            if(studentOptional.isPresent()){
+                throw new IllegalStateException("email taken");
+            }
+            student.setEmail(email);
         }
 
     }
